@@ -12,11 +12,27 @@ css base() {
     font-size: 1.5em;
 }
 
+css flexcontainer() {
+    display: flex; 
+    flex-direction: row; 
+    justify-content: center; 
+    align-items: center; 
+    height: 300px;
+}
+
+css column(){
+    padding: 10px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    background-color: #1f1d2e;
+}
+
 templ head(){
     <head>
         <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-        <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
-        <title>Another Brick</title>
+        <script src="https://unpkg.com/htmx-ext-json-enc@2.0.1/json-enc.js"></script>
+        <title>Weblights</title>
     </head>
 }
 
@@ -28,10 +44,12 @@ templ header(){
 }
 
 templ setColor(){
+    <h3>Set Solid Color</h3>
+
     <div class="color-form">
         <form
             hx-target="#status" 
-            hx-post="/api/lights"
+            hx-post="/api/color"
             hx-ext="json-enc"
         >
             <input
@@ -45,14 +63,45 @@ templ setColor(){
     </div>
 }
 
+templ setAltColor(){
+    <div class="color-form">
+        <form
+            hx-target="#status" 
+            hx-post="/api/altColor"
+            hx-ext="json-enc"
+        >
+            <input
+                type="text"
+                name="color1"
+                placeholder="Color (#FF0000)"
+                size="16"
+            />
+            <input
+                type="text"
+                name="color2"
+                placeholder="Color (#00FF00)"
+                size="16"
+            />
+            <button type="submit">Send</button>
+        </form>
+    </div>
+}
+
 templ MainPage(){
     <!DOCTYPE html>
     <html>
         @head()
         <body class={base()}>
             <center>@header()</center>
-            <center>@setColor()</center>
-            <br>
+            <div class={flexcontainer()}>
+                <div class={column()}>
+                    @setColor()
+                </div>
+                <div class={column()}>
+                    <h3>Set Alternating Colors</h3>
+                    @setAltColor()
+                </div>
+            </div>
             <div id="status">
                 <p>None</p>
             </div>

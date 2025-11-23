@@ -1,0 +1,4 @@
+.env
+weblights
+main_templ.go
+rpi_ws281x/

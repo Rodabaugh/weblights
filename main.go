@@ -54,7 +54,8 @@ func main() {
 		MainPage().Render(r.Context(), w)
 	})
 
-	mux.HandleFunc("POST /api/lights", apiCfg.setColor)
+	mux.HandleFunc("POST /api/color", apiCfg.setColor)
+	mux.HandleFunc("POST /api/altColor", apiCfg.setAltColor)
 
 	server := &http.Server{
 		Addr:         ":8080",
