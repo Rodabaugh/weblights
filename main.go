@@ -1,10 +1,17 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/Rodabaugh/weblights/internal/database"
+	"github.com/joho/godotenv"
+
+	_ "github.com/lib/pq"
 	ws2811 "github.com/rpi-ws281x/rpi-ws281x-go"
 )
 
@@ -16,10 +23,29 @@ const (
 
 type apiConfig struct {
 	platform string
+	db       *database.Queries
 	lgts     *lights
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("Using enviroment variables.")
+	} else {
+		fmt.Println("Loaded .env file.")
+	}
+
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL must be set")
+	}
+
+	dbConn, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatalf("Error opening database: %s", err)
+	}
+	dbQueries := database.New(dbConn)
+
 	// Init lights
 	opt := ws2811.DefaultOptions
 	opt.Channels[0].Brightness = brightness
@@ -38,15 +64,16 @@ func main() {
 	// Init server
 	apiCfg := apiConfig{
 		lgts: lights,
+		db:   dbQueries,
 	}
 
 	// Testing
 	lights.setFullStringColor(uint32(0x6feb92))
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 50)
 	lights.setFullStringColor(uint32(0xc1f677))
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 50)
 	lights.setFullStringColor(uint32(0x74318f))
-	time.Sleep(time.Millisecond * 100)
+	time.Sleep(time.Millisecond * 50)
 
 	mux := http.NewServeMux()
 

@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/Rodabaugh/weblights/internal/database"
 )
 
 func (apiCfg apiConfig) setColor(w http.ResponseWriter, r *http.Request) {
@@ -20,11 +23,13 @@ func (apiCfg apiConfig) setColor(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Was unable to decode parameters", err)
+		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Solid Color: %s", params.Color), false)
 		return
 	}
 
 	newColor, err := hexToGRB(params.Color)
 	if err != nil {
+		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Solid Color: %s", params.Color), false)
 		Fail().Render(r.Context(), w)
 		return
 	}
@@ -33,6 +38,7 @@ func (apiCfg apiConfig) setColor(w http.ResponseWriter, r *http.Request) {
 
 	err = apiCfg.lgts.setFullStringColor(newColor)
 	if err != nil {
+		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Solid Color: %s", params.Color), false)
 		Fail().Render(r.Context(), w)
 		return
 	}
@@ -43,6 +49,8 @@ func (apiCfg apiConfig) setColor(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Solid Color: %s", params.Color), true)
 	Success().Render(r.Context(), w)
 }
 
@@ -60,18 +68,21 @@ func (apiCfg apiConfig) setAltColor(w http.ResponseWriter, r *http.Request) {
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
+		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Alt Colors: %s, %s", params.Color1, params.Color2), false)
 		respondWithError(w, http.StatusInternalServerError, "Was unable to decode parameters", err)
 		return
 	}
 
 	newColor1, err := hexToGRB(params.Color1)
 	if err != nil {
+		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Alt Colors: %s, %s", params.Color1, params.Color2), false)
 		Fail().Render(r.Context(), w)
 		return
 	}
 
 	newColor2, err := hexToGRB(params.Color2)
 	if err != nil {
+		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Alt Colors: %s, %s", params.Color1, params.Color2), false)
 		Fail().Render(r.Context(), w)
 		return
 	}
@@ -80,6 +91,7 @@ func (apiCfg apiConfig) setAltColor(w http.ResponseWriter, r *http.Request) {
 
 	err = apiCfg.lgts.setAltStringColor(newColor1, newColor2)
 	if err != nil {
+		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Alt Colors: %s, %s", params.Color1, params.Color2), false)
 		Fail().Render(r.Context(), w)
 		return
 	}
@@ -90,5 +102,18 @@ func (apiCfg apiConfig) setAltColor(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Alt Colors: %s, %s", params.Color1, params.Color2), true)
 	Success().Render(r.Context(), w)
+}
+
+func (apiCfg apiConfig) newLogEntry(ctx context.Context, requester, request string, result bool) {
+	_, err := apiCfg.db.CreateLogEntry(ctx, database.CreateLogEntryParams{
+		Requester: requester,
+		Request:   request,
+		Result:    result,
+	})
+	if err != nil {
+		fmt.Printf("DB Error: %v\n", err)
+	}
 }
