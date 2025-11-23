@@ -1,0 +1,69 @@
+package main
+
+css base() {
+    background-color: #191724;
+    color: #e0def4;
+    font-family: Monospace;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 10%;
+    margin-right: 10%;
+    font-size: 1.5em;
+}
+
+templ head(){
+    <head>
+        <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+        <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+        <title>Another Brick</title>
+    </head>
+}
+
+templ header(){
+    <div style="line-height: .2;">
+        <h1 style="color:#f6c177">Lights</h1>
+        <h4 style="color:#ebbcba">Over HTTP!</h4>
+    </div>
+}
+
+templ setColor(){
+    <div class="color-form">
+        <form
+            hx-target="#status" 
+            hx-post="/api/lights"
+            hx-ext="json-enc"
+        >
+            <input
+                type="text"
+                name="color"
+                placeholder="Color (#FF0000)"
+                size="16"
+            />
+            <button type="submit">Send</button>
+        </form>
+    </div>
+}
+
+templ MainPage(){
+    <!DOCTYPE html>
+    <html>
+        @head()
+        <body class={base()}>
+            <center>@header()</center>
+            <center>@setColor()</center>
+            <br>
+            <div id="status">
+                <p>None</p>
+            </div>
+        </body>
+    </html>
+}
+
+templ Success(){
+    <p>Success</p>
+}
+
+templ Fail(){
+    <p>Fail</p>
+}
