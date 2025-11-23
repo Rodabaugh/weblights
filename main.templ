@@ -16,7 +16,6 @@ css flexcontainer() {
     display: flex; 
     flex-direction: row; 
     justify-content: center; 
-    align-items: center; 
     height: 300px;
 }
 
@@ -24,8 +23,20 @@ css column(){
     padding: 10px;
     flex: 1;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     background-color: #1f1d2e;
+}
+
+css button(){
+    background-color: #26233a;
+    color: #e0def4;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    width: 100px;
+    height: 45px;
+    transition: 0.3s;
 }
 
 templ head(){
@@ -49,45 +60,93 @@ templ setColor(){
     <div class="color-form">
         <form
             hx-target="#status" 
-            hx-post="/api/color"
+            hx-post="/api/lights/color"
             hx-ext="json-enc"
         >
             <input
-                type="text"
+                type="color"
                 name="color"
-                placeholder="Color (#FF0000)"
-                size="16"
+                value="#00538a"
             />
-            <button type="submit">Send</button>
+            <button class={button()} type="submit">Set</button>
         </form>
     </div>
 }
 
 templ setAltColor(){
+    <h3>Set Alternating Colors</h3>
+
     <div class="color-form">
         <form
             hx-target="#status" 
-            hx-post="/api/altColor"
+            hx-post="/api/lights/altColor"
             hx-ext="json-enc"
         >
             <input
-                type="text"
+                type="color"
                 name="color1"
-                placeholder="Color (#FF0000)"
-                size="16"
+                value="#00538a"
             />
             <input
-                type="text"
+                type="color"
                 name="color2"
-                placeholder="Color (#00FF00)"
-                size="16"
+                value="#ffffff"
             />
-            <button type="submit">Send</button>
+            <button class={button()} type="submit">Set</button>
         </form>
     </div>
 }
 
-templ MainPage(){
+templ setPreset(presets []Preset){
+    <h3>Set Preset</h3>
+
+    <div class="color-form">
+        <form
+            hx-target="#status" 
+            hx-post="/api/lights/preset"
+            hx-ext="json-enc"
+        >
+            <select name="presetid">
+				for _, preset := range presets {
+					<option value={preset.ID.String()}>{preset.Name}</option>
+				}
+			</select>
+            <button class={button()} type="submit">Set</button>
+        </form>
+    </div>
+}
+
+templ newPreset(){
+    <h3>New Preset</h3>
+
+    <div class="color-form">
+        <form
+            hx-target="#status" 
+            hx-post="/api/presets"
+            hx-ext="json-enc"
+        >
+            <input
+                type="text"
+                name="name"
+                placeholder="Name"
+                size="10"
+            />
+            <input
+                type="color"
+                name="color1"
+                value="#00538a"
+            />
+            <input
+                type="color"
+                name="color2"
+                value="#ffffff"
+            />
+            <button class={button()} type="submit">Set</button>
+        </form>
+    </div>
+}
+
+templ MainPage(cfg *apiConfig){
     <!DOCTYPE html>
     <html>
         @head()
@@ -96,10 +155,11 @@ templ MainPage(){
             <div class={flexcontainer()}>
                 <div class={column()}>
                     @setColor()
+                    @setPreset(cfg.getPresets())
                 </div>
                 <div class={column()}>
-                    <h3>Set Alternating Colors</h3>
                     @setAltColor()
+                    @newPreset()
                 </div>
             </div>
             <div id="status">
@@ -115,4 +175,8 @@ templ Success(){
 
 templ Fail(){
     <p>Fail</p>
+}
+
+templ SetStatus(newStatus string){
+    <p>{newStatus}</p>
 }

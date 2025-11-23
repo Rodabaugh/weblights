@@ -78,11 +78,13 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		MainPage().Render(r.Context(), w)
+		MainPage(&apiCfg).Render(r.Context(), w)
 	})
 
-	mux.HandleFunc("POST /api/color", apiCfg.setColor)
-	mux.HandleFunc("POST /api/altColor", apiCfg.setAltColor)
+	mux.HandleFunc("POST /api/lights/color", apiCfg.setColor)
+	mux.HandleFunc("POST /api/lights/altColor", apiCfg.setAltColor)
+	mux.HandleFunc("POST /api/lights/preset", apiCfg.setPreset)
+	mux.HandleFunc("POST /api/presets", apiCfg.newPreset)
 
 	server := &http.Server{
 		Addr:         ":8080",

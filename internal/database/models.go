@@ -18,3 +18,12 @@ type Log struct {
 	Request   string
 	Result    bool
 }
+
+type Preset struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
+	Color1    int64
+	Color2    int64
+}
