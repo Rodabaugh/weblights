@@ -16,8 +16,7 @@ type Preset struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Name      string
-	Color1    uint32
-	Color2    uint32
+	Colors    []int64
 }
 
 func (apiCfg apiConfig) setColor(w http.ResponseWriter, r *http.Request) {
@@ -84,6 +83,8 @@ func (apiCfg apiConfig) setAltColor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var colors []int64
+
 	newColor1, err := hexToGRB(params.Color1)
 	if err != nil {
 		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Alt Colors: %s, %s", params.Color1, params.Color2), false)
@@ -98,9 +99,11 @@ func (apiCfg apiConfig) setAltColor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	colors = append(colors, newColor1, newColor2)
+
 	fmt.Printf("Settings lights to %s and %s\n", params.Color1, params.Color2)
 
-	err = apiCfg.lgts.setAltStringColor(newColor1, newColor2)
+	err = apiCfg.lgts.setAltStringColor(colors)
 	if err != nil {
 		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Alt Colors: %s, %s", params.Color1, params.Color2), false)
 		Fail().Render(r.Context(), w)
@@ -133,8 +136,7 @@ func (apiCfg apiConfig) getPresets() []Preset {
 			CreatedAt: dbPreset.CreatedAt,
 			UpdatedAt: dbPreset.UpdatedAt,
 			Name:      dbPreset.Name,
-			Color1:    uint32(dbPreset.Color1),
-			Color2:    uint32(dbPreset.Color2),
+			Colors:    dbPreset.Colors,
 		})
 	}
 
@@ -143,9 +145,8 @@ func (apiCfg apiConfig) getPresets() []Preset {
 
 func (apiCfg apiConfig) newPreset(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Name   string `json:"name"`
-		Color1 string `json:"color1"`
-		Color2 string `json:"color2"`
+		Name   string   `json:"name"`
+		Colors []string `json:"colors"`
 	}
 
 	type response struct {
@@ -157,36 +158,33 @@ func (apiCfg apiConfig) newPreset(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Was unable to decode parameters", err)
-		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("New Preset: %s - %s, %s", params.Name, params.Color1, params.Color2), false)
+		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("New Preset: %s", params.Name), false)
 		return
 	}
 
-	newColor1, err := hexToGRB(params.Color1)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Was unable to decode parameters", err)
-		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("New Preset: %s - %s, %s", params.Name, params.Color1, params.Color2), false)
-		return
-	}
+	var colors []int64
 
-	newColor2, err := hexToGRB(params.Color2)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Was unable to decode parameters", err)
-		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("New Preset: %s - %s, %s", params.Name, params.Color1, params.Color2), false)
-		return
+	for _, color := range params.Colors {
+		colorInt, err := hexToGRB(color)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Was unable to decode parameters", err)
+			apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("New Preset: %s", params.Name), false)
+			return
+		}
+		colors = append(colors, colorInt)
 	}
 
 	newDBPreset, err := apiCfg.db.CreatePreset(r.Context(), database.CreatePresetParams{
-		Name:   fmt.Sprintf("%s - %s - %s", params.Name, params.Color1, params.Color2),
-		Color1: int64(newColor1),
-		Color2: int64(newColor2),
+		Name:   fmt.Sprintf("%s - %+v", params.Name, params.Colors),
+		Colors: colors,
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Was write to DB", err)
-		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("New Preset: %s - %s, %s", params.Name, params.Color1, params.Color2), false)
+		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("New Preset: %s", params.Name), false)
 		return
 	}
 
-	apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("New Preset: %s - %s, %s", params.Name, params.Color1, params.Color2), true)
+	apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("New Preset: %s", params.Name), true)
 	SetStatus(fmt.Sprintf("Created new preset: %s", newDBPreset.Name)).Render(r.Context(), w)
 }
 
@@ -220,7 +218,7 @@ func (apiCfg apiConfig) setPreset(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("Settings lights to %s\n", preset.Name)
 
-	err = apiCfg.lgts.setAltStringColor(uint32(preset.Color1), uint32(preset.Color2))
+	err = apiCfg.lgts.setAltStringColor(preset.Colors)
 	if err != nil {
 		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Set Preset: %s", params.PresetID), false)
 		Fail().Render(r.Context(), w)

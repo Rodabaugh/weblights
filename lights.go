@@ -27,9 +27,9 @@ func (lgt *lights) setup() error {
 	return lgt.ws.Init()
 }
 
-func (lgt *lights) setFullStringColor(color uint32) error {
+func (lgt *lights) setFullStringColor(color int64) error {
 	for i := 0; i < len(lgt.ws.Leds(0)); i++ {
-		lgt.ws.Leds(0)[i] = color
+		lgt.ws.Leds(0)[i] = uint32(color)
 	}
 	if err := lgt.ws.Render(); err != nil {
 		return err
@@ -37,21 +37,24 @@ func (lgt *lights) setFullStringColor(color uint32) error {
 	return nil
 }
 
-func (lgt *lights) setAltStringColor(color1, color2 uint32) error {
-	for i := 0; i < len(lgt.ws.Leds(0)); i++ {
-		if i%2 == 0 {
-			lgt.ws.Leds(0)[i] = color1
-		} else {
-			lgt.ws.Leds(0)[i] = color2
-		}
+func (lgt *lights) setAltStringColor(colors []int64) error {
+	if len(colors) == 0 {
+		return fmt.Errorf("no colors supplied")
 	}
+
+	numLEDs := len(lgt.ws.Leds(0))
+	for i := 0; i < numLEDs; i++ {
+		colorIdx := i % len(colors)
+		lgt.ws.Leds(0)[i] = uint32(colors[colorIdx])
+	}
+
 	if err := lgt.ws.Render(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func hexToGRB(hexColor string) (uint32, error) {
+func hexToGRB(hexColor string) (int64, error) {
 	if len(hexColor) == 7 && hexColor[0] == '#' {
 		hexColor = hexColor[1:]
 	}
@@ -72,7 +75,7 @@ func hexToGRB(hexColor string) (uint32, error) {
 		return 0, err
 	}
 
-	grb := uint32(g)<<16 | uint32(r)<<8 | uint32(b)
+	grb := int64(g)<<16 | int64(r)<<8 | int64(b)
 
 	return grb, nil
 }

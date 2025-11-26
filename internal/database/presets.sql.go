@@ -9,32 +9,31 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 const createPreset = `-- name: CreatePreset :one
-INSERT INTO presets (id, created_at, updated_at, name, color1, color2)
+INSERT INTO presets (id, created_at, updated_at, name, colors)
 VALUES (
-    gen_random_uuid(), NOW(), NOW(), $1, $2, $3
+    gen_random_uuid(), NOW(), NOW(), $1, $2
 )
-RETURNING id, created_at, updated_at, name, color1, color2
+RETURNING id, created_at, updated_at, name, colors
 `
 
 type CreatePresetParams struct {
 	Name   string
-	Color1 int64
-	Color2 int64
+	Colors []int64
 }
 
 func (q *Queries) CreatePreset(ctx context.Context, arg CreatePresetParams) (Preset, error) {
-	row := q.db.QueryRowContext(ctx, createPreset, arg.Name, arg.Color1, arg.Color2)
+	row := q.db.QueryRowContext(ctx, createPreset, arg.Name, pq.Array(arg.Colors))
 	var i Preset
 	err := row.Scan(
 		&i.ID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Name,
-		&i.Color1,
-		&i.Color2,
+		pq.Array(&i.Colors),
 	)
 	return i, err
 }
@@ -49,7 +48,7 @@ func (q *Queries) DeletePresetByID(ctx context.Context, id uuid.UUID) error {
 }
 
 const getAllPresets = `-- name: GetAllPresets :many
-SELECT id, created_at, updated_at, name, color1, color2 FROM presets
+SELECT id, created_at, updated_at, name, colors FROM presets
 `
 
 func (q *Queries) GetAllPresets(ctx context.Context) ([]Preset, error) {
@@ -66,8 +65,7 @@ func (q *Queries) GetAllPresets(ctx context.Context) ([]Preset, error) {
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Name,
-			&i.Color1,
-			&i.Color2,
+			pq.Array(&i.Colors),
 		); err != nil {
 			return nil, err
 		}
@@ -83,7 +81,7 @@ func (q *Queries) GetAllPresets(ctx context.Context) ([]Preset, error) {
 }
 
 const getPresetByID = `-- name: GetPresetByID :one
-SELECT id, created_at, updated_at, name, color1, color2 FROM presets WHERE id = $1
+SELECT id, created_at, updated_at, name, colors FROM presets WHERE id = $1
 `
 
 func (q *Queries) GetPresetByID(ctx context.Context, id uuid.UUID) (Preset, error) {
@@ -94,8 +92,7 @@ func (q *Queries) GetPresetByID(ctx context.Context, id uuid.UUID) (Preset, erro
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Name,
-		&i.Color1,
-		&i.Color2,
+		pq.Array(&i.Colors),
 	)
 	return i, err
 }

@@ -67,18 +67,13 @@ func main() {
 		db:   dbQueries,
 	}
 
-	// Testing
-	lights.setFullStringColor(uint32(0x6feb92))
-	time.Sleep(time.Millisecond * 50)
-	lights.setFullStringColor(uint32(0xc1f677))
-	time.Sleep(time.Millisecond * 50)
-	lights.setFullStringColor(uint32(0x74318f))
-	time.Sleep(time.Millisecond * 50)
-
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		MainPage(&apiCfg).Render(r.Context(), w)
+	})
+	mux.HandleFunc("GET /color-picker", func(w http.ResponseWriter, r *http.Request) {
+		ColorPicker().Render(r.Context(), w)
 	})
 
 	mux.HandleFunc("POST /api/lights/color", apiCfg.setColor)

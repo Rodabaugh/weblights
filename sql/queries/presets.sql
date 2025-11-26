@@ -1,7 +1,7 @@
 -- name: CreatePreset :one
-INSERT INTO presets (id, created_at, updated_at, name, color1, color2)
+INSERT INTO presets (id, created_at, updated_at, name, colors)
 VALUES (
-    gen_random_uuid(), NOW(), NOW(), $1, $2, $3
+    gen_random_uuid(), NOW(), NOW(), $1, $2
 )
 RETURNING *;
 

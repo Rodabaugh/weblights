@@ -24,6 +24,5 @@ type Preset struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Name      string
-	Color1    int64
-	Color2    int64
+	Colors    []int64
 }
