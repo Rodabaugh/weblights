@@ -1,0 +1,13 @@
+[Unit]
+Description=Lights over HTTP. By https://erikrodabaugh.com
+After=network.target
+
+[Service]
+Type=simple
+EnviromentFile=/usr/local/bin/weblights/.env
+ExecStart=/usr/local/bin/weblights/weblights
+WorkingDirectory=/usr/local/bin/weblights
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
