@@ -25,4 +25,5 @@ type Preset struct {
 	UpdatedAt time.Time
 	Name      string
 	Colors    []int64
+	Protected bool
 }

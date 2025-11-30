@@ -17,7 +17,7 @@ INSERT INTO presets (id, created_at, updated_at, name, colors)
 VALUES (
     gen_random_uuid(), NOW(), NOW(), $1, $2
 )
-RETURNING id, created_at, updated_at, name, colors
+RETURNING id, created_at, updated_at, name, colors, protected
 `
 
 type CreatePresetParams struct {
@@ -34,6 +34,7 @@ func (q *Queries) CreatePreset(ctx context.Context, arg CreatePresetParams) (Pre
 		&i.UpdatedAt,
 		&i.Name,
 		pq.Array(&i.Colors),
+		&i.Protected,
 	)
 	return i, err
 }
@@ -48,7 +49,9 @@ func (q *Queries) DeletePresetByID(ctx context.Context, id uuid.UUID) error {
 }
 
 const getAllPresets = `-- name: GetAllPresets :many
-SELECT id, created_at, updated_at, name, colors FROM presets
+SELECT id, created_at, updated_at, name, colors, protected
+FROM presets
+ORDER BY protected DESC
 `
 
 func (q *Queries) GetAllPresets(ctx context.Context) ([]Preset, error) {
@@ -66,6 +69,7 @@ func (q *Queries) GetAllPresets(ctx context.Context) ([]Preset, error) {
 			&i.UpdatedAt,
 			&i.Name,
 			pq.Array(&i.Colors),
+			&i.Protected,
 		); err != nil {
 			return nil, err
 		}
@@ -81,7 +85,7 @@ func (q *Queries) GetAllPresets(ctx context.Context) ([]Preset, error) {
 }
 
 const getPresetByID = `-- name: GetPresetByID :one
-SELECT id, created_at, updated_at, name, colors FROM presets WHERE id = $1
+SELECT id, created_at, updated_at, name, colors, protected FROM presets WHERE id = $1
 `
 
 func (q *Queries) GetPresetByID(ctx context.Context, id uuid.UUID) (Preset, error) {
@@ -93,6 +97,7 @@ func (q *Queries) GetPresetByID(ctx context.Context, id uuid.UUID) (Preset, erro
 		&i.UpdatedAt,
 		&i.Name,
 		pq.Array(&i.Colors),
+		&i.Protected,
 	)
 	return i, err
 }

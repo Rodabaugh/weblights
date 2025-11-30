@@ -6,7 +6,9 @@ VALUES (
 RETURNING *;
 
 -- name: GetAllPresets :many
-SELECT * FROM presets;
+SELECT *
+FROM presets
+ORDER BY protected DESC;
 
 -- name: GetPresetByID :one
 SELECT * FROM presets WHERE id = $1;

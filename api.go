@@ -17,6 +17,7 @@ type Preset struct {
 	UpdatedAt time.Time
 	Name      string
 	Colors    []int64
+	Protected bool
 }
 
 func (apiCfg apiConfig) setColor(w http.ResponseWriter, r *http.Request) {
@@ -184,8 +185,51 @@ func (apiCfg apiConfig) newPreset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("New Preset: %s", params.Name), true)
-	SetStatus(fmt.Sprintf("Created new preset: %s", newDBPreset.Name)).Render(r.Context(), w)
+	apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("New Preset: %s", newDBPreset.Name), true)
+	Controls(&apiCfg).Render(r.Context(), w)
+}
+
+func (apiCfg apiConfig) deletePreset(w http.ResponseWriter, r *http.Request) {
+	presetID := r.URL.Query().Get("presetid")
+	if presetID == "" {
+		respondWithError(
+			w,
+			http.StatusBadRequest,
+			"Missing required query parameter: presetid",
+			nil,
+		)
+		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, "Delete Preset: Missing presetid", false)
+		return
+	}
+
+	uuid, err := uuid.Parse(presetID)
+	if err != nil {
+		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Delete Preset: Invalid UUID %s", presetID), false)
+		respondWithError(w, http.StatusBadRequest, "Invalid preset ID (not a valid UUID)", err)
+		return
+	}
+
+	preset, err := apiCfg.db.GetPresetByID(r.Context(), uuid)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Was unable to find preset", err)
+		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, "Delete Preset: Not Found", false)
+		return
+	}
+
+	if preset.Protected {
+		SetStatus(fmt.Sprintf("You don't have the rights to delete preset: %s", preset.Name)).Render(r.Context(), w)
+		return
+	}
+
+	err = apiCfg.db.DeletePresetByID(r.Context(), uuid)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Was unable to delete preset", err)
+		apiCfg.newLogEntry(r.Context(), r.RemoteAddr, "Delete Preset: Unable to Decode", false)
+		return
+	}
+
+	apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Deleted Preset: %s", preset.Name), true)
+	Controls(&apiCfg).Render(r.Context(), w)
 }
 
 func (apiCfg apiConfig) setPreset(w http.ResponseWriter, r *http.Request) {

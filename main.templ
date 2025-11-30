@@ -16,11 +16,11 @@ css flexcontainer() {
     display: flex; 
     flex-direction: row; 
     justify-content: center; 
-    height: 300px;
+    height: 24em;
 }
 
 css column(){
-    padding: 10px;
+    padding: 1em;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -31,12 +31,23 @@ css column(){
 css button(){
     background-color: #26233a;
     color: #e0def4;
-    border: none;
+    border-style: solid;
+    border-width: .3em;
+    border-color: #1f1d2e;
     cursor: pointer;
-    border-radius: 8px;
-    width: 100px;
-    height: 45px;
-    transition: 0.3s;
+    border-radius: .5em;
+    width: 7em;
+    height: 3em;
+}
+
+css input(){
+    background-color: #26233a;
+    color: #e0def4;
+    border-style: solid;
+    border-width: .3em;
+    border-color: #1f1d2e;
+    width: 14em;
+    height: 2em;
 }
 
 templ head(){
@@ -120,31 +131,44 @@ templ ColorPicker(){
     <input type="color" name="colors" value="#00538a" />
 }
 
-templ newPreset() {
-    <h3>New Preset</h3>
+templ ManagePresets(cfg *apiConfig) {
+    <div id="manage-presets">
+        <h3>New Preset</h3>
+        <form hx-post="/api/presets" hx-target="#controls"
+              hx-ext="json-enc" hx-swap="innerHTML">
+            <input class={input()} type="text" name="name" placeholder="Name" required />
+            <div class="preset-color-picker">@ColorPicker()</div>
 
-    <div class="color-form">
-        <form hx-target="#status"
-              hx-post="/api/presets"
-              hx-ext="json-enc"
-              hx-swap="innerHTML">
-            <input type="text"
-                   name="name"
-                   placeholder="Name"
-                   size="15"
-                   required />
-            <div class="preset-color-picker">
-                @ColorPicker()
-            </div>
-            <button class={button()} id="add-color"
+            <button class={button()} type="button"
                     hx-get="/color-picker"
                     hx-target=".preset-color-picker"
-                    hx-swap="beforeend"
-                    type="button">
+                    hx-swap="beforeend">
                 + Add Color
             </button>
+
             <button class={button()} type="submit">Add</button>
         </form>
+
+        <h3>Delete Preset</h3>
+        <form hx-delete="/api/presets" hx-target="#controls" hx-ext="json-enc" x-swap="innerHTML">
+            <select name="presetid">
+				for _, preset := range cfg.getPresets() {
+					<option value={preset.ID.String()}>{preset.Name}</option>
+				}
+			</select>
+            <button class={button()} type="submit">Delete</button>
+        </form>
+    </div>
+}
+
+templ Controls(cfg *apiConfig){
+    <div class={column()}>
+        @setColor()
+        @setAltColor()
+        @setPreset(cfg.getPresets())
+    </div>
+    <div class={column()}>
+        @ManagePresets(cfg)
     </div>
 }
 
@@ -154,15 +178,8 @@ templ MainPage(cfg *apiConfig){
         @head()
         <body class={base()}>
             <center>@header()</center>
-            <div class={flexcontainer()}>
-                <div class={column()}>
-                    @setColor()
-                    @setPreset(cfg.getPresets())
-                </div>
-                <div class={column()}>
-                    @setAltColor()
-                    @newPreset()
-                </div>
+            <div class={flexcontainer()} id="controls">
+                @Controls(cfg)
             </div>
             <div id="status">
                 <p>None</p>

@@ -72,6 +72,9 @@ func main() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		MainPage(&apiCfg).Render(r.Context(), w)
 	})
+	mux.HandleFunc("GET /controls", func(w http.ResponseWriter, r *http.Request) {
+		Controls(&apiCfg).Render(r.Context(), w)
+	})
 	mux.HandleFunc("GET /color-picker", func(w http.ResponseWriter, r *http.Request) {
 		ColorPicker().Render(r.Context(), w)
 	})
@@ -80,6 +83,7 @@ func main() {
 	mux.HandleFunc("POST /api/lights/altColor", apiCfg.setAltColor)
 	mux.HandleFunc("POST /api/lights/preset", apiCfg.setPreset)
 	mux.HandleFunc("POST /api/presets", apiCfg.newPreset)
+	mux.HandleFunc("DELETE /api/presets", apiCfg.deletePreset)
 
 	server := &http.Server{
 		Addr:         ":8080",
