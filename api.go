@@ -25,10 +25,6 @@ func (apiCfg apiConfig) setColor(w http.ResponseWriter, r *http.Request) {
 		Color string `json:"color"`
 	}
 
-	type response struct {
-		success bool `json:"success"`
-	}
-
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
@@ -55,6 +51,10 @@ func (apiCfg apiConfig) setColor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Header.Get("Accept") == "application/json" {
+		type response struct {
+			success bool `json:"success"`
+		}
+
 		respondWithJSON(w, http.StatusCreated, response{
 			success: true,
 		})
@@ -69,10 +69,6 @@ func (apiCfg apiConfig) setAltColor(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Color1 string `json:"color1"`
 		Color2 string `json:"color2"`
-	}
-
-	type response struct {
-		success bool `json:"success"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -112,6 +108,10 @@ func (apiCfg apiConfig) setAltColor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Header.Get("Accept") == "application/json" {
+		type response struct {
+			success bool `json:"success"`
+		}
+
 		respondWithJSON(w, http.StatusCreated, response{
 			success: true,
 		})
@@ -150,10 +150,6 @@ func (apiCfg apiConfig) newPreset(w http.ResponseWriter, r *http.Request) {
 		Colors []string `json:"colors"`
 	}
 
-	type response struct {
-		success bool `json:"success"`
-	}
-
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
@@ -186,6 +182,18 @@ func (apiCfg apiConfig) newPreset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("New Preset: %s", newDBPreset.Name), true)
+
+	if r.Header.Get("Accept") == "application/json" {
+		type response struct {
+			success bool `json:"success"`
+		}
+
+		respondWithJSON(w, http.StatusCreated, response{
+			success: true,
+		})
+		return
+	}
+
 	Controls(&apiCfg).Render(r.Context(), w)
 }
 
@@ -229,16 +237,24 @@ func (apiCfg apiConfig) deletePreset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	apiCfg.newLogEntry(r.Context(), r.RemoteAddr, fmt.Sprintf("Deleted Preset: %s", preset.Name), true)
+
+	if r.Header.Get("Accept") == "application/json" {
+		type response struct {
+			success bool `json:"success"`
+		}
+
+		respondWithJSON(w, http.StatusNoContent, response{
+			success: true,
+		})
+		return
+	}
+
 	Controls(&apiCfg).Render(r.Context(), w)
 }
 
 func (apiCfg apiConfig) setPreset(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		PresetID string `json:"presetId"`
-	}
-
-	type response struct {
-		success bool `json:"success"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -270,6 +286,10 @@ func (apiCfg apiConfig) setPreset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Header.Get("Accept") == "application/json" {
+		type response struct {
+			success bool `json:"success"`
+		}
+
 		respondWithJSON(w, http.StatusCreated, response{
 			success: true,
 		})

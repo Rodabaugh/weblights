@@ -1,3 +1,23 @@
+# weblights
+
+HTTP Controlled WS2811 Lights on Raspberry Pi. Built using go, tmepl, and HTMX.
+
+## Why
+
+This project was create to enable control over the lights in my cubicle and on my Chrismas tree. 
+
+## About the Project
+
+The entire project is run on a Raspberry Pi. When on your local network, requests are fulfilled nearly instantly. For public access, you can setup a VPN between the Pi and a VPS running a reverse proxy. With this setup, you can also enable SSL using certbot. This adds some latency, but is still fairly responsive.
+
+## Technical Features
+ 
+- The interface is served using templ, with HTMX for some interactivity
+- Presets are stored in a PostgreSQL database, running on the Pi
+- Presets support a dynamic number of colors
+- While an admin mode does not exist, you can manually update the protected column in the presets table to write protect a preset
+- Attempts to update the status of the lights are stored in the logs table, as well as if the request was successful
+
 # Install
 
 ## Prerequisites
