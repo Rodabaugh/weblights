@@ -34,6 +34,9 @@ The entire project is run on a Raspberry Pi. When on your local network, request
 3. A 5V power supply with enough amperage to power your lights.
 4. The required misc parts to connect everything
 
+### Connecting the Pi
+Connect the striped ground from the light string to ground on the Pi, and the center data pin on the light string to pin 12 on the Pi. 
+
 ### Install Tools
 
 Connect to your pi, and run the following commands.
