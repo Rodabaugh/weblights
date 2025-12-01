@@ -29,6 +29,14 @@ cmake -D BUILD_SHARED=OFF -D BUILD_TEST=ON ..
 sudo make install
 ```
 
+## Clone the Project
+
+``` bash
+cd ~
+git clone https://github.com/Rodabaugh/weblights
+cd weblights
+```
+
 ## Setup DB
 
 ### Install PostgreSQL
