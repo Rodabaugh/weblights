@@ -2,8 +2,7 @@ run:
 	templ generate && go run .
 
 build:
-	templ generate
-	rsync -r ../weblights lights:/home/erikrodabaugh/
+	~/go/bin/templ generate && go build .
 
 clean:
 	go clean
@@ -12,19 +11,23 @@ clean:
 install: install-bin install-service enable-start
 
 install-bin:
+	@echo "-- Stopping weblights.service (if running)"
+	sudo systemctl stop weblights.service || true
 	@echo "-- Creating /usr/local/bin/weblights"
 	sudo mkdir -p /usr/local/bin/weblights
 	@echo "-- Copying .env and weblights binary"
-	sudo cp .env weblights /usr/local/bin/weblights/
+	sudo cp -f .env weblights /usr/local/bin/weblights/
+	@echo "-- Setting ownership to root:root (optional)"
+	sudo chown -R root:root /usr/local/bin/weblights
 
 install-service:
 	@echo "-- Installing weblights.service"
-	sudo cp weblights.service /etc/systemd/system/
+	cp weblights.service /etc/systemd/system/
 	@echo "-- Reloading systemd"
-	sudo systemctl daemon-reload
+	systemctl daemon-reload
 
 enable-start: install-service
 	@echo "-- Enabling weblights.service"
-	sudo systemctl enable weblights.service
+	systemctl enable weblights.service
 	@echo "-- Starting weblights.service"
-	sudo systemctl start weblights.service
+	systemctl start weblights.service

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/Rodabaugh/weblights/internal/database"
@@ -15,10 +16,8 @@ import (
 	ws2811 "github.com/rpi-ws281x/rpi-ws281x-go"
 )
 
-// Replace with env vars later
 const (
 	brightness = 90
-	ledCounts  = 250
 )
 
 type apiConfig struct {
@@ -40,6 +39,21 @@ func main() {
 		log.Fatal("DB_URL must be set")
 	}
 
+	platform := os.Getenv("PLATFORM")
+	if platform == "" {
+		log.Fatal("PLATFORM must be set")
+	}
+
+	ledCount := os.Getenv("NUM_LEDS")
+	if dbURL == "" {
+		log.Fatal("NUM_LEDS must be set")
+	}
+
+	ledCountInt, err := strconv.ParseInt(ledCount, 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	dbConn, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatalf("Error opening database: %s", err)
@@ -49,7 +63,7 @@ func main() {
 	// Init lights
 	opt := ws2811.DefaultOptions
 	opt.Channels[0].Brightness = brightness
-	opt.Channels[0].LedCount = ledCounts
+	opt.Channels[0].LedCount = int(ledCountInt)
 
 	dev, err := ws2811.MakeWS2811(&opt)
 	checkError(err)
@@ -92,6 +106,6 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	log.Printf("Starting weblights on port: 8080\n")
+	log.Printf("Starting weblights in %s mode on port: 8080\n", platform)
 	log.Fatal(server.ListenAndServe())
 }
